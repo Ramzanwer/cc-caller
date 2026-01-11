@@ -11,6 +11,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { SSEServerTransport } from "@modelcontextprotocol/sdk/server/sse.js";
 import { callManager } from "./services/callManager.js";
 import { MessageType, CallRequest, WSMessage } from "./types.js";
+import { getVapidPublicKey, setPushSubscription } from "./services/pushService.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -487,6 +488,50 @@ app.get("/health", (_req, res) => {
     status: "ok",
     ...callManager.getStats()
   });
+});
+
+// ---- Web Push endpoints ----
+
+app.get("/push/vapid-public-key", (_req, res) => {
+  const publicKey = getVapidPublicKey();
+  if (!publicKey) {
+    res.status(503).json({
+      error: "Web Push not configured (missing VAPID_PUBLIC_KEY / VAPID_PRIVATE_KEY / VAPID_SUBJECT)"
+    });
+    return;
+  }
+
+  res.json({ publicKey });
+});
+
+app.post("/push/subscribe", (req, res) => {
+  // Minimal validation: keep strictness at system boundary only.
+  const sub = req.body as unknown as {
+    endpoint?: unknown;
+    keys?: { p256dh?: unknown; auth?: unknown };
+    expirationTime?: unknown;
+  };
+
+  if (!sub || typeof sub.endpoint !== "string" || !sub.keys) {
+    res.status(400).json({ error: "Invalid subscription payload" });
+    return;
+  }
+  if (typeof sub.keys.p256dh !== "string" || typeof sub.keys.auth !== "string") {
+    res.status(400).json({ error: "Invalid subscription keys" });
+    return;
+  }
+
+  setPushSubscription({
+    endpoint: sub.endpoint,
+    keys: {
+      p256dh: sub.keys.p256dh,
+      auth: sub.keys.auth
+    },
+    expirationTime:
+      typeof sub.expirationTime === "number" || sub.expirationTime === null ? sub.expirationTime : undefined
+  });
+
+  res.json({ ok: true });
 });
 
 // Stats endpoint

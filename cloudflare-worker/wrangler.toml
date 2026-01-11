@@ -2,6 +2,12 @@ name = "cc-caller"
 main = "src/index.ts"
 compatibility_date = "2026-01-11"
 
+[vars]
+# Note: Set VAPID_PRIVATE_KEY as a Wrangler secret (not in this file).
+# VAPID_PUBLIC_KEY and VAPID_SUBJECT can be stored as non-secret vars.
+VAPID_PUBLIC_KEY = ""
+VAPID_SUBJECT = "mailto:cc-caller@example.com"
+
 [[containers]]
 class_name = "ClaudeCallerContainer"
 image = "../Dockerfile"

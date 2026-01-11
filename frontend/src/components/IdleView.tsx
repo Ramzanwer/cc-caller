@@ -2,9 +2,17 @@ import React from 'react';
 
 interface IdleViewProps {
   isConnected: boolean;
+  onEnableNotifications: () => void;
+  notificationsStatus: 'unknown' | 'enabled' | 'denied' | 'unsupported' | 'error';
+  notificationsMessage?: string;
 }
 
-export const IdleView: React.FC<IdleViewProps> = ({ isConnected }) => {
+export const IdleView: React.FC<IdleViewProps> = ({
+  isConnected,
+  onEnableNotifications,
+  notificationsStatus,
+  notificationsMessage
+}) => {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-8">
       {/* Logo */}
@@ -36,6 +44,28 @@ export const IdleView: React.FC<IdleViewProps> = ({ isConnected }) => {
         <span className={isConnected ? 'text-green-300' : 'text-red-300'}>
           {isConnected ? 'Connected - Waiting for calls' : 'Connecting to server...'}
         </span>
+      </div>
+
+      {/* Push Notifications */}
+      <div className="mt-6 flex flex-col items-center gap-3">
+        <button
+          onClick={onEnableNotifications}
+          disabled={notificationsStatus === 'enabled' || notificationsStatus === 'denied' || notificationsStatus === 'unsupported'}
+          className="bg-violet-600/50 hover:bg-violet-500/50 disabled:bg-violet-900/40 disabled:cursor-not-allowed border border-violet-400/30 text-violet-100 px-6 py-3 rounded-xl transition-all"
+        >
+          {notificationsStatus === 'enabled'
+            ? 'Notifications enabled'
+            : notificationsStatus === 'denied'
+              ? 'Notifications blocked'
+              : notificationsStatus === 'unsupported'
+                ? 'Notifications unsupported'
+                : 'Enable notifications'}
+        </button>
+        {notificationsMessage && (
+          <p className="text-violet-200/80 text-sm text-center max-w-md">
+            {notificationsMessage}
+          </p>
+        )}
       </div>
 
       {/* Instructions */}

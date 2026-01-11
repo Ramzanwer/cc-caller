@@ -7,60 +7,13 @@ import {
   MessageType,
   WSMessage
 } from "../types.js";
+import { sendPushNotification } from "./pushService.js";
 
 export class CallManager {
   private activeCalls: Map<string, ActiveCall> = new Map();
   private clients: Map<WebSocket, ClientConnection> = new Map();
   private claudeClient: WebSocket | null = null;
   private userClients: Set<WebSocket> = new Set();
-
-  private async sendPushPlusIncomingCall(request: CallRequest): Promise<void> {
-    const token = process.env.PUSHPLUS_TOKEN;
-    if (!token) {
-      console.warn("[CallManager] PUSHPLUS_TOKEN not set; skipping PushPlus notification");
-      return;
-    }
-
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 3000);
-
-    try {
-      const title = "Incoming call";
-      const contentLines = [
-        `Call ID: ${request.callId}`,
-        `Urgency: ${request.urgency}`,
-        "",
-        request.message
-      ];
-      if (request.context) {
-        contentLines.push("", `Context: ${request.context}`);
-      }
-
-      const response = await fetch("https://www.pushplus.plus/send", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          token,
-          title,
-          content: contentLines.join("\n"),
-          template: "txt"
-        }),
-        signal: controller.signal
-      });
-
-      if (!response.ok) {
-        const bodyText = await response.text().catch(() => "");
-        console.warn(
-          `[CallManager] PushPlus send failed: HTTP ${response.status} ${response.statusText}${bodyText ? ` - ${bodyText}` : ""}`
-        );
-      }
-    } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
-      console.warn(`[CallManager] PushPlus send error: ${message}`);
-    } finally {
-      clearTimeout(timeoutId);
-    }
-  }
 
   // Register a new client connection
   registerClient(ws: WebSocket, clientType: "claude" | "user", userId?: string): void {
@@ -80,6 +33,21 @@ export class CallManager {
     } else {
       this.userClients.add(ws);
       console.log(`[CallManager] User client registered: ${userId || "anonymous"}`);
+
+      // If there is a ringing call, notify the newly connected user client.
+      for (const call of this.activeCalls.values()) {
+        if (call.status !== CallStatus.RINGING) continue;
+        this.sendToUser(ws, {
+          type: MessageType.INCOMING_CALL,
+          payload: {
+            callId: call.callId,
+            message: call.request.message,
+            urgency: call.request.urgency,
+            context: call.request.context
+          },
+          timestamp: Date.now()
+        });
+      }
     }
   }
 
@@ -111,18 +79,6 @@ export class CallManager {
 
     this.activeCalls.set(request.callId, call);
 
-    void this.sendPushPlusIncomingCall(request).catch((error) => {
-      const message = error instanceof Error ? error.message : String(error);
-      console.warn(`[CallManager] PushPlus send unhandled error: ${message}`);
-    });
-
-    // Notify all user clients about incoming call
-    if (this.userClients.size === 0) {
-      console.log("[CallManager] No user clients connected");
-      this.updateCallStatus(request.callId, CallStatus.FAILED, "No user clients connected");
-      return;
-    }
-
     call.status = CallStatus.RINGING;
 
     // Send incoming call notification to all user clients
@@ -137,7 +93,21 @@ export class CallManager {
       timestamp: Date.now()
     };
 
-    this.broadcastToUsers(incomingCallMessage);
+    // Always attempt a Web Push notification (SW can suppress when app is foregrounded).
+    void sendPushNotification({
+      type: "incoming_call",
+      title: "Incoming call",
+      body: request.message,
+      callId: request.callId,
+      urgency: request.urgency,
+      url: "/"
+    });
+
+    if (this.userClients.size === 0) {
+      console.log("[CallManager] No user clients connected (will rely on Web Push)");
+    } else {
+      this.broadcastToUsers(incomingCallMessage);
+    }
 
     // Set timeout for no answer
     setTimeout(() => {
@@ -223,6 +193,15 @@ export class CallManager {
       return;
     }
 
+    // Always attempt a Web Push notification (SW can suppress when app is foregrounded).
+    void sendPushNotification({
+      type: "tts_message",
+      title: "New message",
+      body: message,
+      callId,
+      url: "/"
+    });
+
     // Send TTS message to user clients
     this.broadcastToUsers({
       type: MessageType.TTS_MESSAGE,
@@ -275,6 +254,11 @@ export class CallManager {
         client.send(messageStr);
       }
     }
+  }
+
+  private sendToUser(ws: WebSocket, message: WSMessage): void {
+    if (ws.readyState !== WebSocket.OPEN) return;
+    ws.send(JSON.stringify(message));
   }
 
   // Get call by ID

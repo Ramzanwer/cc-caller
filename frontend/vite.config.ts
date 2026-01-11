@@ -6,6 +6,9 @@ export default defineConfig({
   plugins: [
     react(),
     VitePWA({
+      strategies: 'injectManifest',
+      srcDir: 'src',
+      filename: 'sw.ts',
       injectRegister: null,
       registerType: 'prompt',
       pwaAssets: {
@@ -40,26 +43,7 @@ export default defineConfig({
           }
         ]
       },
-      workbox: {
-        navigateFallback: '/index.html',
-        navigateFallbackDenylist: [/^\/health$/, /^\/stats$/],
-        runtimeCaching: [
-          {
-            urlPattern: /\.(?:png|gif|jpg|jpeg|svg|webp)$/i,
-            handler: 'CacheFirst',
-            options: {
-              cacheName: 'images',
-              expiration: {
-                maxEntries: 100,
-                maxAgeSeconds: 60 * 60 * 24 * 30
-              },
-              cacheableResponse: {
-                statuses: [0, 200]
-              }
-            }
-          }
-        ]
-      }
+      // Note: runtime caching is handled by the injected SW (injectManifest strategy).
     })
   ],
   server: {

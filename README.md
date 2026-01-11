@@ -100,6 +100,36 @@ npx wrangler deploy
 
 部署完成后，你会得到一个 Worker URL。该 Worker 会把 HTTP/WebSocket 请求转发到容器实例（容器镜像使用仓库根目录 `Dockerfile` 构建）。
 
+### Web Push（浏览器系统推送）配置
+
+cc-caller 支持 PWA 的 Web Push 推送（用于“来电 / 新消息”在后台也能通知你）。Cloudflare 的 HTTPS 域名满足 Web Push 的基础要求。
+
+你需要配置 3 个环境变量（VAPID）并注入到容器进程：
+
+- `VAPID_PUBLIC_KEY`（非敏感，可放在 `wrangler.toml` 的 `[vars]`）
+- `VAPID_PRIVATE_KEY`（敏感，必须用 Wrangler Secret）
+- `VAPID_SUBJECT`（例如 `mailto:you@example.com`，可放在 `[vars]`）
+
+生成 VAPID key（本地执行一次即可）：
+
+```bash
+cd backend
+npx web-push generate-vapid-keys --json
+```
+
+配置到 Cloudflare：
+
+```bash
+cd cloudflare-worker
+npx wrangler secret put VAPID_PRIVATE_KEY
+```
+
+然后在 `cloudflare-worker/wrangler.toml` 的 `[vars]` 里填入 `VAPID_PUBLIC_KEY` 与 `VAPID_SUBJECT`，再部署：
+
+```bash
+npx wrangler deploy
+```
+
 ### PWA（可安装）与缓存注意事项
 
 为了让移动端 PWA 的更新行为可控（Service Worker 与 manifest 能及时更新），建议在 Cloudflare 的 Cache Rules / 其他缓存层做如下保守设置：

@@ -1,0 +1,17 @@
+name = "cc-caller"
+main = "src/index.ts"
+compatibility_date = "2026-01-11"
+
+[[containers]]
+class_name = "ClaudeCallerContainer"
+image = "../Dockerfile"
+max_instances = 1
+
+[[durable_objects.bindings]]
+class_name = "ClaudeCallerContainer"
+name = "CLAUDE_CALLER"
+
+[[migrations]]
+new_sqlite_classes = ["ClaudeCallerContainer"]
+tag = "v1"
+

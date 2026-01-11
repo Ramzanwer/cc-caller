@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "cc-caller": {
+      "command": "node",
+      "args": ["./mcp-server/dist/index.js"],
+      "env": {
+        "CALLER_WS_URL": "ws://localhost:3001"
+      }
+    }
+  }
+}

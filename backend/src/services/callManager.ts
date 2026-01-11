@@ -14,6 +14,54 @@ export class CallManager {
   private claudeClient: WebSocket | null = null;
   private userClients: Set<WebSocket> = new Set();
 
+  private async sendPushPlusIncomingCall(request: CallRequest): Promise<void> {
+    const token = process.env.PUSHPLUS_TOKEN;
+    if (!token) {
+      console.warn("[CallManager] PUSHPLUS_TOKEN not set; skipping PushPlus notification");
+      return;
+    }
+
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 3000);
+
+    try {
+      const title = "Incoming call";
+      const contentLines = [
+        `Call ID: ${request.callId}`,
+        `Urgency: ${request.urgency}`,
+        "",
+        request.message
+      ];
+      if (request.context) {
+        contentLines.push("", `Context: ${request.context}`);
+      }
+
+      const response = await fetch("https://www.pushplus.plus/send", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          token,
+          title,
+          content: contentLines.join("\n"),
+          template: "txt"
+        }),
+        signal: controller.signal
+      });
+
+      if (!response.ok) {
+        const bodyText = await response.text().catch(() => "");
+        console.warn(
+          `[CallManager] PushPlus send failed: HTTP ${response.status} ${response.statusText}${bodyText ? ` - ${bodyText}` : ""}`
+        );
+      }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      console.warn(`[CallManager] PushPlus send error: ${message}`);
+    } finally {
+      clearTimeout(timeoutId);
+    }
+  }
+
   // Register a new client connection
   registerClient(ws: WebSocket, clientType: "claude" | "user", userId?: string): void {
     const connection: ClientConnection = {
@@ -62,6 +110,11 @@ export class CallManager {
     };
 
     this.activeCalls.set(request.callId, call);
+
+    void this.sendPushPlusIncomingCall(request).catch((error) => {
+      const message = error instanceof Error ? error.message : String(error);
+      console.warn(`[CallManager] PushPlus send unhandled error: ${message}`);
+    });
 
     // Notify all user clients about incoming call
     if (this.userClients.size === 0) {

@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Source icon for PWA asset generation. -->
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="64" y1="64" x2="448" y2="448" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#1e1b4b"/>
+      <stop offset="0.55" stop-color="#312e81"/>
+      <stop offset="1" stop-color="#4c1d95"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="160" y1="144" x2="352" y2="368" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#a78bfa"/>
+      <stop offset="1" stop-color="#7c3aed"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="12" stdDeviation="18" flood-color="#000000" flood-opacity="0.35"/>
+    </filter>
+  </defs>
+
+  <rect x="64" y="64" width="384" height="384" rx="96" fill="url(#bg)"/>
+
+  <!-- Simple phone handset glyph -->
+  <path
+    d="M199 150c-10 0-19 6-23 16l-18 43c-3 8-2 18 4 25l28 34c-1 3-2 6-2 9 0 12 6 31 24 56 18 25 41 48 66 66 25 18 44 24 56 24 3 0 6-1 9-2l34 28c8 6 18 7 26 4l42-18c10-4 16-13 16-23v-53c0-11-8-21-19-23l-48-10c-9-2-18 2-23 10l-12 20c-20-9-43-25-66-48-23-23-39-46-48-66l20-12c8-5 12-14 10-23l-10-48c-2-11-12-19-23-19h-53z"
+    fill="url(#accent)"
+    filter="url(#shadow)"
+  />
+
+  <!-- Small dot to hint "caller" status -->
+  <circle cx="356" cy="170" r="18" fill="#22c55e"/>
+</svg>
+

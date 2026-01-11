@@ -100,6 +100,15 @@ npx wrangler deploy
 
 部署完成后，你会得到一个 Worker URL。该 Worker 会把 HTTP/WebSocket 请求转发到容器实例（容器镜像使用仓库根目录 `Dockerfile` 构建）。
 
+### PWA（可安装）与缓存注意事项
+
+为了让移动端 PWA 的更新行为可控（Service Worker 与 manifest 能及时更新），建议在 Cloudflare 的 Cache Rules / 其他缓存层做如下保守设置：
+
+- `https://ccaller.xxx.com/sw.js`：不要强缓存（建议 bypass / no-cache）
+- `https://ccaller.xxx.com/manifest.webmanifest`：不要强缓存（建议 bypass / no-cache）
+
+其余带 hash 的静态资源可以保持默认缓存策略，以获得更好的加载性能。
+
 ### 使用 GitHub Actions 自动部署（不需要本机 Docker）
 
 如果你的电脑无法使用 Docker，可以使用 GitHub Actions 在 Linux runner 上自动构建并部署（runner 自带 Docker，适配 Containers 的构建流程；参考官方说明：[`Cloudflare Containers docs`](https://developers.cloudflare.com/containers/llms-full.txt)）。

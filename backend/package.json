@@ -10,10 +10,12 @@
     "dev": "tsx watch src/index.ts"
   },
   "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.25.2",
     "cors": "^2.8.5",
     "express": "^4.21.0",
     "uuid": "^10.0.0",
-    "ws": "^8.18.0"
+    "ws": "^8.18.0",
+    "zod": "^4.3.5"
   },
   "devDependencies": {
     "@types/cors": "^2.8.17",

